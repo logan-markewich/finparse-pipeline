@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finparse-pipeline"
+version = "0.1.0"
+description = "FinParse NYC Workshop — parse, extract, and review financial documents"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20.0",
+    "pydantic-settings>=2.0",
+    "litellm>=1.40.0",
+    "llama-cloud>=0.1.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5.0",
+    "ty>=0.0.30",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+# ---------- Ruff ----------
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "RUF",   # ruff-specific rules
+]
+ignore = [
+    "B008",  # function call in default argument — standard FastAPI pattern (Depends)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# ---------- ty ----------
+
+[tool.ty.environment]
+python-version = "3.11"
+
+# ---------- Pytest ----------
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
