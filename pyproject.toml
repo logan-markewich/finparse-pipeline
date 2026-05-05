@@ -46,9 +46,6 @@ select = [
     "SIM",   # flake8-simplify
     "RUF",   # ruff-specific rules
 ]
-ignore = [
-    "B008",  # function call in default argument — standard FastAPI pattern (Depends)
-]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

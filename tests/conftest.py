@@ -2,9 +2,8 @@ import os
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.db import get_db
 from app.models import Base
 
 # Use an in-memory SQLite database for tests
@@ -17,15 +16,14 @@ os.environ.setdefault("DATABASE_URL", TEST_DATABASE_URL)
 
 
 @pytest.fixture
-async def db_session():
-    """Create a fresh in-memory database for each test."""
+async def test_session_factory():
+    """Create a fresh in-memory database and return a session factory."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with session_factory() as session:
-        yield session
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    yield factory
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -33,19 +31,18 @@ async def db_session():
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession):
-    """Create a test client with the DB session overridden."""
-    from app.main import app
+async def client(test_session_factory):
+    """Create a test client with the DB session factory patched globally."""
+    import app.db
+    from app.main import app as fastapi_app
 
-    async def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
+    original = app.db.async_session
+    app.db.async_session = test_session_factory
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=fastapi_app),
+            base_url="http://test",
+        ) as ac:
+            yield ac
+    finally:
+        app.db.async_session = original

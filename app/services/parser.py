@@ -6,7 +6,7 @@ This is the first service attendees implement. It handles:
 3. Storing the parsed markdown in the database
 """
 
-from app.db import async_session
+from app import db
 from app.models import Document, JobStatus
 
 
@@ -28,16 +28,16 @@ async def parse_document(document_id: int, file_path: str) -> None:
     Hints:
         - from app.config import settings  # for settings.llama_cloud_api_key
         - The LlamaCloud client has methods for creating and polling parse jobs
-        - Use `async with async_session() as db:` to get a DB session in a background job
-        - Don't forget to await db.commit() after updating the document
+        - Use `async with db.async_session() as session:` to get a DB session
+        - Don't forget to await session.commit() after updating the document
     """
-    async with async_session() as db:
-        doc = await db.get(Document, document_id)
+    async with db.async_session() as session:
+        doc = await session.get(Document, document_id)
         if not doc:
             return
 
         doc.status = JobStatus.processing
-        await db.commit()
+        await session.commit()
 
         try:
             # ------------------------------------------------------------------
@@ -52,10 +52,10 @@ async def parse_document(document_id: int, file_path: str) -> None:
             raise NotImplementedError("Implement LlamaParse integration — see instructions above")
 
             doc.status = JobStatus.completed
-            await db.commit()
+            await session.commit()
 
         except Exception as e:
             doc.status = JobStatus.failed
             doc.error = str(e)
-            await db.commit()
+            await session.commit()
             raise

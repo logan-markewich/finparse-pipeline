@@ -4,7 +4,7 @@ After a document is parsed, this service runs structured extraction
 against it using a Pydantic schema to pull out specific fields.
 """
 
-from app.db import async_session
+from app import db
 from app.extraction_schemas.brokerage_statement import BrokerageStatementExtraction
 from app.extraction_schemas.pay_stub import PayStubExtraction
 from app.models import Extraction, JobStatus
@@ -37,24 +37,24 @@ async def extract_from_document(extraction_id: int, document_id: int, schema_nam
         - Store the result with json.dumps()
     """
     if schema_name not in EXTRACTION_SCHEMAS:
-        async with async_session() as db:
-            extraction = await db.get(Extraction, extraction_id)
+        async with db.async_session() as session:
+            extraction = await session.get(Extraction, extraction_id)
             if extraction:
                 extraction.status = JobStatus.failed
                 available = list(EXTRACTION_SCHEMAS.keys())
                 extraction.error = f"Unknown schema: {schema_name}. Available: {available}"
-                await db.commit()
+                await session.commit()
         return
 
     _schema_class = EXTRACTION_SCHEMAS[schema_name]
 
-    async with async_session() as db:
-        extraction = await db.get(Extraction, extraction_id)
+    async with db.async_session() as session:
+        extraction = await session.get(Extraction, extraction_id)
         if not extraction:
             return
 
         extraction.status = JobStatus.processing
-        await db.commit()
+        await session.commit()
 
         try:
             # ------------------------------------------------------------------
@@ -70,10 +70,10 @@ async def extract_from_document(extraction_id: int, document_id: int, schema_nam
             raise NotImplementedError("Implement LlamaParse extraction — see instructions above")
 
             extraction.status = JobStatus.completed
-            await db.commit()
+            await session.commit()
 
         except Exception as e:
             extraction.status = JobStatus.failed
             extraction.error = str(e)
-            await db.commit()
+            await session.commit()
             raise
