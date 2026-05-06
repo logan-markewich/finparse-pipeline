@@ -80,8 +80,6 @@ finparse-pipeline/
 
 ## What's Already Built
 
-Everything except the four core services. This is your task!
-
 ### API Endpoints
 
 All endpoints are live and wired up. They return proper errors until you implement the backing services.
