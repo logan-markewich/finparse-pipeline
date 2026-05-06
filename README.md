@@ -22,7 +22,7 @@ A loan underwriting pipeline that processes a borrower's financial documents:
 
 ```bash
 # Clone and install
-git clone <repo-url> && cd finparse-pipeline
+git clone https://github.com/logan-markewich/finparse-pipeline && cd finparse-pipeline
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
@@ -80,7 +80,7 @@ finparse-pipeline/
 
 ## What's Already Built
 
-Everything except the four core services. The scaffolding is fully functional -- routes, database, job queue, schemas, tests -- so you can focus on the interesting parts.
+Everything except the four core services. This is your task!
 
 ### API Endpoints
 
@@ -123,7 +123,7 @@ Upload PDF --> Route creates DB record --> Enqueues parse job --> Returns immedi
 
 The client polls `GET /documents/{id}` until `status` changes from `processing` to `completed`. Same pattern for extractions and reviews.
 
-In production, you'd swap this for Celery/ARQ + Redis. The in-process queue keeps workshop setup to zero external dependencies.
+In production, you'd swap this for Celery/ARQ + Redis or similar. The in-process queue keeps workshop setup to zero external dependencies.
 
 ### Extraction Schemas
 
@@ -135,7 +135,7 @@ Two Pydantic models define what to extract from each document type. These are pr
 
 ### LLM Wrapper
 
-`app/services/llm.py` provides a thin `chat_completion()` function backed by [litellm](https://docs.litellm.ai/). Change the `LLM_MODEL` env var to use any provider (OpenAI, Anthropic, etc.) with no code changes.
+`app/services/llm.py` provides a thin `chat_completion()` function backed by [litellm](https://docs.litellm.ai/). Change the `LLM_MODEL` env var to use any provider (OpenAI, Anthropic, etc.) with no code changes, or use another SDK of your choosing.
 
 ## What You'll Implement
 
@@ -222,7 +222,7 @@ curl -X PATCH http://localhost:8000/reviews/1 \
   -d '{"decision": "approved", "reviewer_notes": "Income and assets verified"}'
 ```
 
-Or just use the Swagger UI at http://localhost:8000/docs -- it's much easier.
+Or just use the docs UI at http://localhost:8000/docs for a more UI driven experience.
 
 ## Development
 
@@ -240,10 +240,3 @@ ty check
 pytest -v
 ```
 
-## Architecture Notes
-
-**Services own the DB lifecycle.** Routes are thin dispatchers -- they parse the request, call a service, and translate errors to HTTP responses. Each service function opens its own database session via `db.async_session()`, does its work, and commits. This avoids holding connections for the lifetime of an HTTP request and keeps business logic testable independently of FastAPI.
-
-**In-process job queue over Celery.** For a workshop, the operational overhead of Redis + a separate worker process isn't worth the setup time. The `asyncio.Queue`-based worker in `app/worker.py` teaches the same pattern (enqueue, worker picks up, updates DB) without external dependencies.
-
-**litellm for LLM calls.** Attendees bring whatever API key they have. Changing providers is a one-line `.env` change, not a code change.
