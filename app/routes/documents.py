@@ -30,3 +30,19 @@ async def get_document(document_id: int):
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     return doc
+
+
+@router.delete("/clear")
+async def clear_documents():
+    """Delete all documents (for testing/demo purposes)."""
+    await documents_service.clear_documents()
+    return {"detail": "All documents cleared"}
+
+
+@router.delete("/{document_id}")
+async def delete_document(document_id: int):
+    """Delete a document by ID."""
+    success = await documents_service.delete_document(document_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return {"detail": "Document deleted"}

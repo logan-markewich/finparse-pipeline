@@ -2,6 +2,7 @@
 
 from app.extraction_schemas.brokerage_statement import BrokerageStatementExtraction
 from app.extraction_schemas.pay_stub import PayStubExtraction
+from app.extraction_schemas.underwriting_summary import UnderwritingSummaryExtraction
 
 
 def test_pay_stub_schema():
@@ -16,3 +17,11 @@ def test_brokerage_statement_schema():
     assert "properties" in schema
     assert "holdings" in schema["properties"]
     assert "total_account_value" in schema["properties"]
+
+
+def test_underwriting_summary_schema():
+    schema = UnderwritingSummaryExtraction.model_json_schema()
+    assert "properties" in schema
+    assert "verified_monthly_income" in schema["properties"]
+    assert "discrepancies" in schema["properties"]
+    assert "months_of_reserves" in schema["properties"]

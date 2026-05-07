@@ -7,12 +7,14 @@ against it using a Pydantic schema to pull out specific fields.
 from app import db
 from app.extraction_schemas.brokerage_statement import BrokerageStatementExtraction
 from app.extraction_schemas.pay_stub import PayStubExtraction
+from app.extraction_schemas.underwriting_summary import UnderwritingSummaryExtraction
 from app.models import Extraction, JobStatus
 
 # Registry mapping schema names to Pydantic models
 EXTRACTION_SCHEMAS: dict = {
     "pay_stub": PayStubExtraction,
     "brokerage_statement": BrokerageStatementExtraction,
+    "underwriting_summary": UnderwritingSummaryExtraction,
 }
 
 

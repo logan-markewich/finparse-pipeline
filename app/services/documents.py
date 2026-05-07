@@ -2,7 +2,7 @@
 
 import os
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app import db
 from app.config import settings
@@ -41,3 +41,21 @@ async def get_all_documents() -> list[Document]:
 async def get_document(document_id: int) -> Document | None:
     async with db.async_session() as session:
         return await session.get(Document, document_id)
+
+
+async def delete_document(document_id: int) -> bool:
+    async with db.async_session() as session:
+        doc = await session.get(Document, document_id)
+        if not doc:
+            return False
+        await session.delete(doc)
+        await session.commit()
+
+    return True
+
+
+async def clear_documents() -> None:
+    """Delete all documents (for testing/demo purposes)."""
+    async with db.async_session() as session:
+        await session.execute(text("DELETE FROM documents"))
+        await session.commit()

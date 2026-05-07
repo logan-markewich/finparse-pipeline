@@ -11,7 +11,6 @@ TEST_DATABASE_URL = "sqlite+aiosqlite://"
 
 # Ensure no real API keys are needed for basic tests
 os.environ.setdefault("LLAMA_CLOUD_API_KEY", "test-key")
-os.environ.setdefault("LLM_MODEL", "openai/gpt-4o")
 os.environ.setdefault("DATABASE_URL", TEST_DATABASE_URL)
 
 
