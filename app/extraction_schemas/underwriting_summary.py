@@ -26,7 +26,8 @@ class UnderwritingSummary(BaseModel):
         description=(
             "Verified gross monthly income in USD. "
             "Calculate from pay stub base salary and pay frequency. "
-            "Exclude overtime or one-time bonuses — note them separately in discrepancies if significant."
+            "Exclude overtime or one-time bonuses — note them separately in "
+            "discrepancies if significant."
         )
     )
     verified_annual_income: float = Field(
@@ -41,7 +42,8 @@ class UnderwritingSummary(BaseModel):
         description=(
             "Total mandatory monthly obligations found on pay stubs in USD — "
             "includes child support, wage garnishments, IRS levies, and similar "
-            "court-ordered or government withholdings. Exclude normal taxes and voluntary deductions."
+            "court-ordered or government withholdings. Exclude normal taxes and "
+            "voluntary deductions."
         )
     )
     months_of_reserves: float = Field(

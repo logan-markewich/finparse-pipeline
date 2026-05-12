@@ -1,26 +1,25 @@
 """Sanity checks that extraction schemas are valid and produce JSON schema."""
 
-from app.extraction_schemas.brokerage_statement import BrokerageStatementExtraction
-from app.extraction_schemas.pay_stub import PayStubExtraction
-from app.extraction_schemas.underwriting_summary import UnderwritingSummaryExtraction
+from app.extraction_schemas.brokerage_statement import BrokerageStatement
+from app.extraction_schemas.pay_stub import PayStub
+from app.extraction_schemas.underwriting_summary import UnderwritingSummary
 
 
 def test_pay_stub_schema():
-    schema = PayStubExtraction.model_json_schema()
+    schema = PayStub.model_json_schema()
     assert "properties" in schema
     assert "gross_pay" in schema["properties"]
     assert "deductions" in schema["properties"]
 
 
 def test_brokerage_statement_schema():
-    schema = BrokerageStatementExtraction.model_json_schema()
+    schema = BrokerageStatement.model_json_schema()
     assert "properties" in schema
-    assert "holdings" in schema["properties"]
-    assert "total_account_value" in schema["properties"]
+    assert "accounts" in schema["properties"]
 
 
 def test_underwriting_summary_schema():
-    schema = UnderwritingSummaryExtraction.model_json_schema()
+    schema = UnderwritingSummary.model_json_schema()
     assert "properties" in schema
     assert "verified_monthly_income" in schema["properties"]
     assert "discrepancies" in schema["properties"]
