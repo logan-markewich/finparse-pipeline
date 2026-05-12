@@ -8,7 +8,7 @@ class Deduction(BaseModel):
     amount: float = Field(description="Deduction amount for the current pay period")
 
 
-class PayStubExtraction(BaseModel):
+class PayStub(BaseModel):
     """Structured extraction schema for a pay stub document."""
 
     employer_name: str = Field(description="Name of the employer / company")

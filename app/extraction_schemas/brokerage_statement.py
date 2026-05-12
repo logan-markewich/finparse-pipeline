@@ -7,7 +7,7 @@ class Holding(BaseModel):
     market_value: float = Field(description="Current market value in USD")
 
 
-class BrokerageStatementExtraction(BaseModel):
+class Account(BaseModel):
     """Structured extraction schema for a brokerage / investment account statement."""
 
     account_holder: str = Field(description="Name of the account holder")
@@ -28,3 +28,13 @@ class BrokerageStatementExtraction(BaseModel):
     unrealized_gains: float | None = Field(
         default=None, description="Unrealized gains/losses, if reported"
     )
+
+
+class BrokerageStatement(BaseModel):
+    """Top-level schema for brokerage statement extraction."""
+
+    accounts: list[Account] = Field(
+        default_factory=list,
+        description="List of accounts included in the statement (some statements have multiple accounts)",
+    )
+
