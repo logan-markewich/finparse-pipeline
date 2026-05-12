@@ -35,6 +35,8 @@ class BrokerageStatement(BaseModel):
 
     accounts: list[Account] = Field(
         default_factory=list,
-        description="List of accounts included in the statement (some statements have multiple accounts)",
+        description=(
+            "List of accounts included in the statement (some statements have multiple accounts)"
+        ),
     )
 
