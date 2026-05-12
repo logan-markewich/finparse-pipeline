@@ -1,6 +1,6 @@
 # FinParse Pipeline
 
-A hands-on workshop where you build a financial document parsing, extraction, and review pipeline from scratch. You'll take real, intentionally difficult financial documents and turn them into structured, usable data using [LlamaParse](https://developers.llamaindex.ai/).
+A code-along workshop where you implement the core services of a financial document parsing, extraction, and review pipeline. The app scaffolding (routes, models, schemas, job queue) is pre-built — you fill in three service files that call [LlamaParse](https://developers.llamaindex.ai/) to turn real financial documents into structured, usable data.
 
 ## What You're Building
 
@@ -23,15 +23,14 @@ A loan underwriting pipeline that processes a borrower's financial documents:
 ```bash
 # Clone and install
 git clone https://github.com/logan-markewich/finparse-pipeline && cd finparse-pipeline
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --group dev
 
 # Configure
 cp .env.example .env
 # Edit .env -- add your LLAMA_CLOUD_API_KEY
 
 # Run
-fastapi dev app/main.py
+uv run fastapi dev app/main.py
 ```
 
 Open http://localhost:8000/docs for the Swagger UI.
@@ -61,6 +60,7 @@ finparse-pipeline/
 │   ├── services/
 │   │   ├── documents.py                  # Document CRUD (upload, list, get)
 │   │   ├── extractions.py               # Extraction CRUD (create, list, get)
+│   │   ├── reviews.py                   # Review CRUD (create, list, get, update)
 │   │   ├── parser.py                     # TODO -- LlamaParse parsing
 │   │   ├── extractor.py                  # TODO -- LlamaParse structured extraction
 │   │   └── reviewer.py                  # TODO -- Review lifecycle + cross-doc analysis
@@ -68,7 +68,9 @@ finparse-pipeline/
 │       ├── documents.py                  # /documents endpoints
 │       ├── extractions.py               # /extractions endpoints
 │       └── reviews.py                   # /reviews endpoints
-├── documents/                            # Sample financial PDFs
+├── documents/
+│   ├── user_1/                           # Pay stub + Fidelity brokerage statement
+│   └── user_2/                           # Pay stub + Vanguard brokerage statement
 ├── tests/                                # Pytest test suite
 ├── pyproject.toml
 └── .env.example
@@ -173,7 +175,7 @@ Once all three services are implemented, the full workflow looks like this:
 ```bash
 # 1. Upload a pay stub
 curl -X POST http://localhost:8000/documents/upload \
-  -F "file=@documents/pay_stub_john_doe.pdf"
+  -F "file=@documents/user_1/pay_stub_john_doe.pdf"
 # Returns: {"id": 1, "status": "pending", ...}
 
 # 2. Poll until parsed
@@ -190,7 +192,8 @@ curl -X POST http://localhost:8000/extractions/documents/1/extract \
 curl http://localhost:8000/extractions/1
 # Returns: {"id": 1, "status": "completed", "extracted_data": {...}, ...}
 
-# 5. Repeat steps 1-4 for a brokerage statement (document 2, extraction 2)
+# 5. Repeat steps 1-4 for a brokerage statement
+#    e.g. upload documents/user_1/Fidelity Sample.pdf, extract with schema_name "brokerage_statement"
 
 # 6. Create a review from both extractions
 curl -X POST http://localhost:8000/reviews/ \
@@ -214,15 +217,15 @@ Or just use the docs UI at http://localhost:8000/docs for a more UI driven exper
 
 ```bash
 # Lint
-ruff check .
+uv run ruff check .
 
 # Format
-ruff format .
+uv run ruff format .
 
 # Type check
-ty check
+uv run ty check
 
 # Test
-pytest -v
+uv run pytest -v
 ```
 
