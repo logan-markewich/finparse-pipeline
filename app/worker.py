@@ -44,5 +44,9 @@ async def worker_loop() -> None:
     sem = asyncio.Semaphore(_MAX_CONCURRENT)
     while True:
         func, args, kwargs = await _queue.get()
-        asyncio.create_task(_run_job(sem, func, args, kwargs))
+        task = asyncio.create_task(_run_job(sem, func, args, kwargs))
 
+        if task.done():
+            if task.exception():
+                logger.error("Job raised an exception: %s", task.exception())
+            _queue.task_done()
