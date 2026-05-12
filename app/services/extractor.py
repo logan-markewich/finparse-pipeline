@@ -4,17 +4,21 @@ After a document is parsed, this service runs structured extraction
 against it using a Pydantic schema to pull out specific fields.
 """
 
+import asyncio
+from llama_cloud import AsyncLlamaCloud
+
 from app import db
-from app.extraction_schemas.brokerage_statement import BrokerageStatementExtraction
-from app.extraction_schemas.pay_stub import PayStubExtraction
-from app.extraction_schemas.underwriting_summary import UnderwritingSummaryExtraction
-from app.models import Extraction, JobStatus
+from app.config import settings
+from app.extraction_schemas.brokerage_statement import BrokerageStatement
+from app.extraction_schemas.pay_stub import PayStub
+from app.extraction_schemas.underwriting_summary import UnderwritingSummary
+from app.models import Document, Extraction, JobStatus
 
 # Registry mapping schema names to Pydantic models
 EXTRACTION_SCHEMAS: dict = {
-    "pay_stub": PayStubExtraction,
-    "brokerage_statement": BrokerageStatementExtraction,
-    "underwriting_summary": UnderwritingSummaryExtraction,
+    "pay_stub": PayStub,
+    "brokerage_statement": BrokerageStatement,
+    "underwriting_summary": UnderwritingSummary,
 }
 
 
@@ -58,23 +62,64 @@ async def extract_from_document(extraction_id: int, document_id: int, schema_nam
         extraction.status = JobStatus.processing
         await session.commit()
 
-        try:
-            # ------------------------------------------------------------------
-            # TODO: Implement LlamaParse extraction here
-            #
-            # 1. Initialize the LlamaCloud client with your API key
-            # 2. Get the document record to find the file path
-            # 3. Submit an extraction job with the Pydantic schema
-            # 4. Poll until the job is complete
-            # 5. Get the structured extraction result
-            # 6. Store it: extraction.extracted_data = json.dumps(result)
-            # ------------------------------------------------------------------
-            raise NotImplementedError("Implement LlamaParse extraction — see instructions above")
+    try:
+        # 1. Initialize the LlamaCloud client with your API key
+        client = AsyncLlamaCloud(api_key=settings.llama_cloud_api_key)
 
+        # 2. Get the document record to find the file path
+        file_path = None
+        async with db.async_session() as session:
+            extraction = await session.get(Extraction, extraction_id)
+            if not extraction:
+                return
+            
+            document = await session.get(Document, extraction.document_id)
+            if not document:
+                raise Exception("Document not found for extraction")
+            
+            file_path = document.file_path
+        
+        if not file_path:
+            raise Exception("Document file path is missing")
+
+        # 3. Submit an extraction job with the Pydantic schema
+        file_obj = await client.files.create(file=file_path, purpose="extract")
+        job = await client.extract.create(
+            file_input=file_obj.id,
+            configuration={
+                "data_schema": _schema_class.model_json_schema(),
+                "tier": "agentic",
+            }
+        )
+
+        # 4. Poll until the job is complete
+        result = await client.extract.get(job.id)
+        while result.status not in ["COMPLETED", "FAILED", "CANCELED"]:
+            await asyncio.sleep(5)  # wait before polling again
+            result = await client.extract.get(job.id)
+        
+        if result.status != "COMPLETED":
+            raise Exception(
+                f"Extraction job failed: {result.status} -> {result.error_message}"
+            )
+        
+        # 5. Get the structured extraction result and validate it with the Pydantic model
+        structured_result = _schema_class.model_validate(result.extract_result)
+
+        # 6. Store it: extraction.extracted_data = json.dumps(result)
+        async with db.async_session() as session:
+            extraction = await session.get(Extraction, extraction_id)
+            if not extraction:
+                return
+            extraction.extracted_data = structured_result.model_dump_json()
             extraction.status = JobStatus.completed
             await session.commit()
 
-        except Exception as e:
+    except Exception as e:
+        async with db.async_session() as session:
+            extraction = await session.get(Extraction, extraction_id)
+            if not extraction:
+                return
             extraction.status = JobStatus.failed
             extraction.error = str(e)
             await session.commit()
