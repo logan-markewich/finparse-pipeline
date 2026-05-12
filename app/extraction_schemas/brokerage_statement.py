@@ -39,4 +39,3 @@ class BrokerageStatement(BaseModel):
             "List of accounts included in the statement (some statements have multiple accounts)"
         ),
     )
-
