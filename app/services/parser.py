@@ -39,23 +39,23 @@ async def parse_document(document_id: int, file_path: str) -> None:
         doc.status = JobStatus.processing
         await session.commit()
 
-        try:
-            # ------------------------------------------------------------------
-            # TODO: Implement LlamaParse integration here
-            #
-            # 1. Initialize the LlamaCloud client with your API key
-            # 2. Upload the file and create a parsing job (use agentic tier)
-            # 3. Poll until the job is complete
-            # 4. Get the parsed markdown result
-            # 5. Store it on doc.parsed_markdown
-            # ------------------------------------------------------------------
-            raise NotImplementedError("Implement LlamaParse integration — see instructions above")
+    try:
+        # ------------------------------------------------------------------
+        # TODO: Implement LlamaParse integration here
+        #
+        # 1. Initialize the LlamaCloud client with your API key
+        # 2. Upload the file and create a parsing job (use agentic tier)
+        # 3. Poll until the job is complete
+        # 4. Get the parsed markdown result
+        # 5. Store it on doc.parsed_markdown
+        # ------------------------------------------------------------------
+        raise NotImplementedError("Implement LlamaParse integration — see instructions above")
 
-            doc.status = JobStatus.completed
-            await session.commit()
-
-        except Exception as e:
+    except Exception as e:
+        async with db.async_session() as session:
+            doc = await session.get(Document, document_id)
             doc.status = JobStatus.failed
             doc.error = str(e)
             await session.commit()
-            raise
+            
+        raise

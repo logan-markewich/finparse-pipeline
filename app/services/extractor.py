@@ -58,24 +58,27 @@ async def extract_from_document(extraction_id: int, document_id: int, schema_nam
         extraction.status = JobStatus.processing
         await session.commit()
 
-        try:
-            # ------------------------------------------------------------------
-            # TODO: Implement LlamaParse extraction here
-            #
-            # 1. Initialize the LlamaCloud client with your API key
-            # 2. Get the document record to find the file path
-            # 3. Submit an extraction job with the Pydantic schema
-            # 4. Poll until the job is complete
-            # 5. Get the structured extraction result
-            # 6. Store it: extraction.extracted_data = json.dumps(result)
-            # ------------------------------------------------------------------
-            raise NotImplementedError("Implement LlamaParse extraction — see instructions above")
+    try:
+        # ------------------------------------------------------------------
+        # TODO: Implement LlamaParse extraction here
+        #
+        # 1. Initialize the LlamaCloud client with your API key
+        # 2. Get the document record to find the file path
+        # 3. Submit an extraction job with the Pydantic schema
+        # 4. Poll until the job is complete
+        # 5. Get the structured extraction result
+        # 6. Store it: extraction.extracted_data = json.dumps(result)
+        # ------------------------------------------------------------------
+        raise NotImplementedError("Implement LlamaParse extraction — see instructions above")
 
-            extraction.status = JobStatus.completed
-            await session.commit()
+        extraction.status = JobStatus.completed
+        await session.commit()
 
-        except Exception as e:
+    except Exception as e:
+        async with db.async_session() as session:
+            extraction = await session.get(Extraction, extraction_id)
             extraction.status = JobStatus.failed
             extraction.error = str(e)
             await session.commit()
-            raise
+            
+        raise

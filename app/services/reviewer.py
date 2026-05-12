@@ -115,15 +115,14 @@ async def update_review(
         if review.status != ReviewStatus.ready_for_review:
             raise ReviewNotReadyError(review.status.value)
 
-        # ------------------------------------------------------------------
-        # TODO: Implement the decision update
-        #
-        # 1. Set review.decision = decision
-        # 2. Set review.reviewer_notes = reviewer_notes
-        # 3. Set review.status to approved or rejected based on the decision
-        # 4. Commit
-        # ------------------------------------------------------------------
-        raise NotImplementedError("Implement review decision update — see instructions above")
+        review.decision = decision
+        review.reviewer_notes = reviewer_notes
+        if decision == ReviewDecision.approved:
+            review.status = ReviewStatus.approved
+        else:
+            review.status = ReviewStatus.rejected
+
+        await session.commit()
 
 
 async def run_review_analysis(review_id: int) -> None:
@@ -152,6 +151,7 @@ async def run_review_analysis(review_id: int) -> None:
         8. Store the result: review.llm_summary = json.dumps(result)
         9. Set status to "ready_for_review"
     """
+    extraction_links = []
     async with db.async_session() as session:
         result = await session.execute(
             select(Review)
@@ -163,30 +163,32 @@ async def run_review_analysis(review_id: int) -> None:
             return
 
         review.status = ReviewStatus.analyzing
+        extraction_links = review.extraction_links or []
         await session.commit()
 
-        try:
-            # ------------------------------------------------------------------
-            # TODO: Implement the review analysis flow
-            #
-            # 1. For each extraction link, load the Extraction record
-            # 2. Collect {"schema_name": ..., "data": ...} for each extraction
-            # 3. Format into text with _format_extractions_as_text()
-            # 4. Upload the text buffer to LlamaParse (see docstring above)
-            # 5. Submit an extraction job with the underwriting_summary schema
-            # 6. Poll for completion
-            # 7. Store: review.llm_summary = json.dumps(result)
-            # 8. Set review.status = ReviewStatus.ready_for_review
-            # ------------------------------------------------------------------
-            raise NotImplementedError("Implement review analysis — see instructions above")
+    try:
+        # ------------------------------------------------------------------
+        # TODO: Implement the review analysis flow
+        #
+        # 1. For each extraction link, load the Extraction record
+        # 2. Collect {"schema_name": ..., "data": ...} for each extraction
+        # 3. Format into text with _format_extractions_as_text()
+        # 4. Upload the text buffer to LlamaParse (see docstring above)
+        # 5. Submit an extraction job with the underwriting_summary schema
+        # 6. Poll for completion
+        # 7. Store: review.llm_summary = json.dumps(result)
+        # 8. Set review.status = ReviewStatus.ready_for_review
+        # ------------------------------------------------------------------
+        raise NotImplementedError("Implement review analysis — see instructions above")
 
-            await session.commit()
-
-        except Exception as e:
+    except Exception as e:
+        async with db.async_session() as session:
+            review = await session.get(Review, review_id)
             review.status = ReviewStatus.pending
             review.error = str(e)
             await session.commit()
-            raise
+
+        raise
 
 
 def _format_extractions_as_text(extractions_data: list[dict]) -> str:
