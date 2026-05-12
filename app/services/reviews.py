@@ -110,7 +110,9 @@ async def update_review(
 
         review.decision = decision
         review.reviewer_notes = reviewer_notes
-        review.status = ReviewStatus.approved if decision == ReviewDecision.approved else ReviewStatus.rejected
+        review.status = ReviewStatus.approved if (
+            decision == ReviewDecision.approved
+        ) else ReviewStatus.rejected
         await session.commit()
 
         return review

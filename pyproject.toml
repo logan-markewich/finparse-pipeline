@@ -12,17 +12,17 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0",
     "aiosqlite>=0.20.0",
     "pydantic-settings>=2.0",
-    "llama-cloud>=0.1.0",
-    "python-multipart>=0.0.9",
+    "llama-cloud>=1.0.0",
+    "python-multipart",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "ruff>=0.5.0",
-    "ty>=0.0.30",
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "httpx>=0.27",
+    "ruff",
+    "ty",
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
 ]
 
 [tool.setuptools.packages.find]
