@@ -23,15 +23,14 @@ A loan underwriting pipeline that processes a borrower's financial documents:
 ```bash
 # Clone and install
 git clone https://github.com/logan-markewich/finparse-pipeline && cd finparse-pipeline
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --group dev
 
 # Configure
 cp .env.example .env
 # Edit .env -- add your LLAMA_CLOUD_API_KEY
 
 # Run
-fastapi dev app/main.py
+uv run fastapi dev app/main.py
 ```
 
 Open http://localhost:8000/docs for the Swagger UI.
@@ -214,15 +213,15 @@ Or just use the docs UI at http://localhost:8000/docs for a more UI driven exper
 
 ```bash
 # Lint
-ruff check .
+uv run ruff check .
 
 # Format
-ruff format .
+uv run ruff format .
 
 # Type check
-ty check
+uv run ty check
 
 # Test
-pytest -v
+uv run pytest -v
 ```
 
