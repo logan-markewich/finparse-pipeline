@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas import ReviewCreateRequest, ReviewResponse, ReviewUpdateRequest
-from app.services import reviewer as reviewer_service
+from app.services import reviews as reviewer_service
 
 router = APIRouter()
 
