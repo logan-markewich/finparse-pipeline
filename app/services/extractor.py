@@ -71,14 +71,11 @@ async def extract_from_document(extraction_id: int, document_id: int, schema_nam
         # ------------------------------------------------------------------
         raise NotImplementedError("Implement LlamaParse extraction — see instructions above")
 
-        extraction.status = JobStatus.completed
-        await session.commit()
-
     except Exception as e:
         async with db.async_session() as session:
             extraction = await session.get(Extraction, extraction_id)
             extraction.status = JobStatus.failed
             extraction.error = str(e)
             await session.commit()
-            
+
         raise
