@@ -54,8 +54,8 @@ async def parse_document(document_id: int, file_path: str) -> None:
     except Exception as e:
         async with db.async_session() as session:
             doc = await session.get(Document, document_id)
-            doc.status = JobStatus.failed
-            doc.error = str(e)
-            await session.commit()
-            
+            if doc:
+                doc.status = JobStatus.failed
+                doc.error = str(e)
+                await session.commit()
         raise

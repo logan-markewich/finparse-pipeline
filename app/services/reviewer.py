@@ -74,9 +74,10 @@ async def run_review_analysis(review_id: int) -> None:
     except Exception as e:
         async with db.async_session() as session:
             review = await session.get(Review, review_id)
-            review.status = ReviewStatus.pending
-            review.error = str(e)
-            await session.commit()
+            if review:
+                review.status = ReviewStatus.pending
+                review.error = str(e)
+                await session.commit()
 
         raise
 
