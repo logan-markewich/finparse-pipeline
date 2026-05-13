@@ -32,9 +32,8 @@ async def run_review_analysis(review_id: int) -> None:
         4. Format the extraction data into a text document (see _format_extractions_as_text)
         5. Upload the text as a buffer file to LlamaParse:
              file_obj = await client.files.create(
-                 file=io.BytesIO(text.encode("utf-8")),
+                 file=(f"review_{review_id}.txt", io.BytesIO(text.encode("utf-8"))),
                  purpose="extract",
-                 external_file_id="review_{review_id}.txt",
              )
         6. Submit an extraction job using the underwriting_summary schema
         7. Poll for completion and get the result
